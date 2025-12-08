@@ -1,0 +1,112 @@
+.form-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #f7fafc;
+    border-radius: 8px;
+}
+
+.form-section h3 {
+    margin: 0 0 1rem;
+    color: #2d3748;
+    font-size: 1.2rem;
+}
+
+.tab-toggle {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tab-toggle button {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    background-color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tab-toggle button.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-add-item {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-add-item:hover {
+    background-color: #38a169;
+}
+
+.order-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.order-items-table th,
+.order-items-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.order-items-table th {
+    background-color: #2d3748;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-remove {
+    padding: 0.4rem 0.8rem;
+    background-color: #fff5f5;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-remove:hover {
+    background-color: #fed7d7;
+}
+
+.order-summary {
+    background-color: #f7fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+}
+
+.order-summary h3 {
+    margin: 0 0 1rem;
+    color: #2d3748;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+}
+
+.summary-row.total {
+    border-top: 2px solid #e2e8f0;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #667eea;
+}

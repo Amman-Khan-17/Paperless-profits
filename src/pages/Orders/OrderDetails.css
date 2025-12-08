@@ -1,0 +1,136 @@
+.order-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.details-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.details-card h3 {
+    margin: 0 0 1rem;
+    color: #2d3748;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: #718096;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.items-table th,
+.items-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.items-table th {
+    background-color: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.9rem;
+}
+
+.item-type {
+    padding: 0.3rem 0.6rem;
+    background-color: #edf2f7;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border: 2px solid #667eea;
+}
+
+.summary-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+.summary-row.total {
+    border-top: 2px solid #667eea;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.details-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+}
+
+.btn-back,
+.btn-cancel-order {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back {
+    background-color: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-back:hover {
+    background-color: #edf2f7;
+}
+
+.btn-cancel-order {
+    background-color: #fc8181;
+    color: white;
+}
+
+.btn-cancel-order:hover {
+    background-color: #f56565;
+    transform: translateY(-2px);
+}
