@@ -58,7 +58,7 @@ const Table = ({ columns, data, onEdit, onDelete, onAdd, addButtonText = 'Add Ne
                                                 <button
                                                     onClick={() => onEdit(row)}
                                                     className="btn-edit"
-                                                    title="Edit"
+                                                    title="View/Edit"
                                                 >
                                                     ✏️
                                                 </button>
@@ -67,11 +67,22 @@ const Table = ({ columns, data, onEdit, onDelete, onAdd, addButtonText = 'Add Ne
                                                 <button
                                                     onClick={() => onDelete(row)}
                                                     className="btn-delete"
-                                                    title="Delete"
+                                                    title="Cancel/Delete"
                                                 >
                                                     🗑️
                                                 </button>
                                             )}
+                                            {/* Render extra actions from parent */}
+                                            {row.extraActions && row.extraActions.map((action, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={action.onClick}
+                                                    className={action.className || 'btn-action'}
+                                                    title={action.title}
+                                                >
+                                                    {action.icon || action.label}
+                                                </button>
+                                            ))}
                                         </td>
                                     )}
                                 </tr>

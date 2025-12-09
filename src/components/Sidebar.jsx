@@ -3,8 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
-    const { user } = useAuth();
-    const isOwner = user?.role === 'owner';
+    const { user, isOwner } = useAuth();
 
     const menuItems = [
         { path: '/', label: 'Dashboard', icon: '🏠' },
@@ -17,7 +16,7 @@ const Sidebar = () => {
 
     // Add Users link only for owners
     if (isOwner) {
-        menuItems.push({ path: '/users', label: 'Users', icon: '👤' });
+        menuItems.push({ path: '/users', label: 'Staff Management', icon: '👤' });
     }
 
     return (

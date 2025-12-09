@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { suppliersAPI } from '../../services/suppliers';
+import { useToast } from '../../context/ToastContext';
 import '../Books/BookForm.css';
 
 const SupplierForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id && id !== 'new';
+    const toast = useToast();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -14,30 +17,59 @@ const SupplierForm = () => {
         address: '',
         city: '',
         postalCode: '',
+        totalSupplies: '', // New field
     });
 
     useEffect(() => {
         if (isEditMode) {
-            setFormData({
-                name: 'Office Depot',
-                email: 'sales@officedepot.com',
-                phone: '555-1001',
-                address: '1000 Business Blvd',
-                city: 'New York',
-                postalCode: '10002',
+            suppliersAPI.getSupplierById(id).then(data => {
+                setFormData({
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    address: data.address || '',
+                    city: data.city || '',
+                    postalCode: data.postal_code || '',
+                    totalSupplies: data.total_supplies || 0, // Map from DB
+                });
+            }).catch(err => {
+                console.error(err);
+                toast.error("Failed to load supplier details.");
             });
         }
-    }, [id, isEditMode]);
+    }, [id, isEditMode, toast]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting supplier:', formData);
-        navigate('/suppliers');
+
+        const supplierData = {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            postal_code: formData.postalCode,
+            total_supplies: parseInt(formData.totalSupplies) || 0, // Map to Snake Case
+        };
+
+        try {
+            if (isEditMode) {
+                await suppliersAPI.updateSupplier(id, supplierData);
+                toast.success("Supplier updated successfully! 🏢");
+            } else {
+                await suppliersAPI.createSupplier(supplierData);
+                toast.success("New supplier added! 🎉");
+            }
+            navigate('/suppliers');
+        } catch (error) {
+            console.error("Failed to save supplier", error);
+            toast.error("Failed to save supplier. Please check inputs.");
+        }
     };
 
     const handleCancel = () => {
@@ -116,6 +148,19 @@ const SupplierForm = () => {
                                 value={formData.postalCode}
                                 onChange={handleChange}
                                 placeholder="00000"
+                            />
+                        </div>
+
+                        <div className="form-field">
+                            <label htmlFor="totalSupplies">Total Supplies</label>
+                            <input
+                                id="totalSupplies"
+                                name="totalSupplies"
+                                type="number"
+                                min="0"
+                                value={formData.totalSupplies}
+                                onChange={handleChange}
+                                placeholder="0"
                             />
                         </div>
                     </div>

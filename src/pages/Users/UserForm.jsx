@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext'; // Import Toast
+import { usersAPI } from '../../services/users';
 import '../Books/BookForm.css';
 
 const UserForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { isOwner } = useAuth();
-    const isEditMode = !!id && id !== 'new';
+    const toast = useToast(); // Initialize Toast
+
+    // Strict Edit Mode Only
+    const isEditMode = true;
 
     const [formData, setFormData] = useState({
         username: '',
         email: '',
-        password: '',
         role: 'sales_man',
         status: 'Active',
     });
@@ -23,41 +27,61 @@ const UserForm = () => {
             return;
         }
 
-        if (isEditMode) {
-            setFormData({
-                username: 'sales_john',
-                email: 'john@paperlessprofits.com',
-                password: '',
-                role: 'sales_man',
-                status: 'Active',
+        if (id === 'new') {
+            toast.info("Creating users is done via Supabase Dashboard.", 4000);
+            navigate('/users');
+            return;
+        }
+
+        if (id) {
+            usersAPI.getUserById(id).then(data => {
+                setFormData({
+                    username: data.username,
+                    email: data.email,
+                    role: data.role,
+                    status: data.status || 'Active',
+                });
+            }).catch(err => {
+                console.error("Failed to fetch user", err);
+                toast.error("Failed to fetch user details.");
             });
         }
-    }, [id, isEditMode, isOwner, navigate]);
+    }, [id, isOwner, navigate, toast]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting user:', formData);
-        navigate('/users');
+        try {
+            const updates = {
+                username: formData.username,
+                email: formData.email,
+                role: formData.role,
+                status: formData.status
+            };
+            await usersAPI.updateUser(id, updates);
+            toast.success("Staff profile updated successfully! 🎉");
+            navigate('/users');
+        } catch (error) {
+            console.error("Failed to update user", error);
+            toast.error("Failed to update user profile.");
+        }
     };
 
     const handleCancel = () => {
         navigate('/users');
     };
 
-    if (!isOwner) {
-        return null;
-    }
+    if (!isOwner) return null;
 
     return (
         <div className="page-container">
             <div className="page-header">
-                <h1>{isEditMode ? '✏️ Edit User' : '➕ Add New User'}</h1>
-                <p>{isEditMode ? 'Update user information' : 'Create a new system user'}</p>
+                <h1>✏️ Edit User Staff</h1>
+                <p>Update staff details and roles</p>
             </div>
 
             <div className="form-container">
@@ -77,35 +101,19 @@ const UserForm = () => {
                         </div>
 
                         <div className="form-field">
-                            <label htmlFor="email">Email *</label>
+                            <label htmlFor="email">Email (Read Only)</label>
                             <input
                                 id="email"
                                 name="email"
                                 type="email"
                                 value={formData.email}
-                                onChange={handleChange}
-                                placeholder="user@paperlessprofits.com"
-                                required
+                                disabled
+                                className="input-disabled"
                             />
                         </div>
                     </div>
 
                     <div className="form-row">
-                        <div className="form-field">
-                            <label htmlFor="password">
-                                Password {isEditMode ? '(leave blank to keep current)' : '*'}
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="Enter password"
-                                required={!isEditMode}
-                            />
-                        </div>
-
                         <div className="form-field">
                             <label htmlFor="role">Role *</label>
                             <select
@@ -140,7 +148,7 @@ const UserForm = () => {
                             Cancel
                         </button>
                         <button type="submit" className="btn-submit">
-                            {isEditMode ? 'Update User' : 'Create User'}
+                            Update Staff
                         </button>
                     </div>
                 </form>

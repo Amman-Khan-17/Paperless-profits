@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { stationaryAPI } from '../../services/stationary';
+import { useToast } from '../../context/ToastContext';
 import '../Books/BookForm.css';
 
 const StationaryForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id && id !== 'new';
+    const toast = useToast();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -18,26 +21,52 @@ const StationaryForm = () => {
 
     useEffect(() => {
         if (isEditMode) {
-            setFormData({
-                name: 'A4 Paper Pack',
-                category: 'Paper',
-                price: '12.99',
-                stock: '150',
-                supplier: 'Office Depot',
-                description: 'Premium white A4 paper, 500 sheets',
+            stationaryAPI.getStationaryById(id).then(data => {
+                setFormData({
+                    name: data.name,
+                    category: data.category || '',
+                    price: data.price,
+                    stock: data.stock,
+                    supplier: data.supplier || '',
+                    description: '', // Not in DB
+                });
+            }).catch(err => {
+                console.error(err);
+                toast.error("Failed to fetch item details.");
             });
         }
-    }, [id, isEditMode]);
+    }, [id, isEditMode, toast]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting stationary item:', formData);
-        navigate('/stationary');
+
+        // Exclude description as it is not in the database schema
+        const stationaryData = {
+            name: formData.name,
+            category: formData.category,
+            price: formData.price,
+            stock: formData.stock,
+            supplier: formData.supplier
+        };
+
+        try {
+            if (isEditMode) {
+                await stationaryAPI.updateStationary(id, stationaryData);
+                toast.success("Item updated successfully! ✏️");
+            } else {
+                await stationaryAPI.createStationary(stationaryData);
+                toast.success("New item added to inventory! 🎉");
+            }
+            navigate('/stationary');
+        } catch (error) {
+            console.error("Failed to save stationary item", error);
+            toast.error("Failed to save item. Please check your inputs.");
+        }
     };
 
     const handleCancel = () => {

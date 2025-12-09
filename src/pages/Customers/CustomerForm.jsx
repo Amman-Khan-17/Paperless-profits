@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { customersAPI } from '../../services/customers';
 import '../Books/BookForm.css';
 
 const CustomerForm = () => {
@@ -18,14 +19,16 @@ const CustomerForm = () => {
 
     useEffect(() => {
         if (isEditMode) {
-            setFormData({
-                name: 'John Smith',
-                email: 'john.smith@email.com',
-                phone: '555-0101',
-                address: '123 Main St',
-                city: 'New York',
-                postalCode: '10001',
-            });
+            customersAPI.getCustomerById(id).then(data => {
+                setFormData({
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    address: data.address || '',
+                    city: data.city || '',
+                    postalCode: data.postal_code || '', // Map snake_case to camelCase for form
+                });
+            }).catch(err => console.error(err));
         }
     }, [id, isEditMode]);
 
@@ -34,10 +37,29 @@ const CustomerForm = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting customer:', formData);
-        navigate('/customers');
+
+        const customerData = {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            postal_code: formData.postalCode, // Map camelCase to snake_case
+        };
+
+        try {
+            if (isEditMode) {
+                await customersAPI.updateCustomer(id, customerData);
+            } else {
+                await customersAPI.createCustomer(customerData);
+            }
+            navigate('/customers');
+        } catch (error) {
+            console.error("Failed to save customer", error);
+            alert("Failed to save customer");
+        }
     };
 
     const handleCancel = () => {

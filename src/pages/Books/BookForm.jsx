@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { booksAPI } from '../../services/books';
+import { useToast } from '../../context/ToastContext';
 import './BookForm.css';
 
 const BookForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id && id !== 'new';
+    const toast = useToast();
 
     const [formData, setFormData] = useState({
         isbn: '',
@@ -20,40 +23,56 @@ const BookForm = () => {
 
     useEffect(() => {
         if (isEditMode) {
-            // In production, fetch book by ID
-            // booksAPI.getBookById(id).then(setFormData);
-
-            // Mock data for editing
-            setFormData({
-                isbn: '978-0-13-468599-1',
-                title: 'Clean Code',
-                author: 'Robert C. Martin',
-                publisher: 'Prentice Hall',
-                category: 'Programming',
-                price: '45.99',
-                stock: '25',
-                description: 'A handbook of agile software craftsmanship',
+            booksAPI.getBookById(id).then(data => {
+                setFormData({
+                    isbn: data.isbn,
+                    title: data.title,
+                    author: data.author,
+                    publisher: data.publisher,
+                    category: data.category || '',
+                    price: data.price,
+                    stock: data.stock,
+                    description: '', // Not in DB
+                });
+            }).catch(err => {
+                console.error(err);
+                toast.error("Failed to fetch book details.");
             });
         }
-    }, [id, isEditMode]);
+    }, [id, isEditMode, toast]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // In production, call create or update API
-        // if (isEditMode) {
-        //   booksAPI.updateBook(id, formData).then(() => navigate('/books'));
-        // } else {
-        //   booksAPI.createBook(formData).then(() => navigate('/books'));
-        // }
+        // Exclude description as it is not in the database schema
+        const bookData = {
+            isbn: formData.isbn,
+            title: formData.title,
+            author: formData.author,
+            publisher: formData.publisher,
+            category: formData.category,
+            price: formData.price,
+            stock: formData.stock
+        };
 
-        console.log('Submitting book:', formData);
-        navigate('/books');
+        try {
+            if (isEditMode) {
+                await booksAPI.updateBook(id, bookData);
+                toast.success("Book updated successfully! 📚");
+            } else {
+                await booksAPI.createBook(bookData);
+                toast.success("New book added to inventory! 🎉");
+            }
+            navigate('/books');
+        } catch (error) {
+            console.error("Failed to save book", error);
+            toast.error("Failed to save book. Please check your inputs.");
+        }
     };
 
     const handleCancel = () => {

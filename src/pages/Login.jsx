@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { mockLogin } from '../services/users';
+import { BookOpen, ArrowRight } from 'lucide-react';
 import './Login.css';
 
 const Login = () => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -18,9 +18,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // Use mock login for testing - replace with real API call later
-            const userData = await mockLogin(username, password);
-            login(userData);
+            await login(email, password);
             navigate('/');
         } catch (err) {
             setError(err.message || 'Invalid credentials');
@@ -31,21 +29,24 @@ const Login = () => {
 
     return (
         <div className="login-container">
-            <div className="login-card">
+            <div className="login-glass-card">
                 <div className="login-header">
-                    <h1>📚 Paperless Profits</h1>
-                    <p>Bookstore Management System</p>
+                    <div className="logo-icon">
+                        <BookOpen size={40} color="white" />
+                    </div>
+                    <h1>Paperless Profits</h1>
+                    <p>Enter your credentials to access the workspace</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="email">Email Address</label>
                         <input
-                            id="username"
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@company.com"
                             required
                             autoFocus
                         />
@@ -58,22 +59,25 @@ const Login = () => {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
+                            placeholder="••••••••"
                             required
                         />
                     </div>
 
-                    {error && <div className="error-message">{error}</div>}
+                    {error && (
+                        <div className="error-message shake">
+                            ⚠️ {error}
+                        </div>
+                    )}
 
                     <button type="submit" className="btn-login" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? 'Accessing Workspace...' : 'Sign In'}
+                        {!loading && <ArrowRight size={18} />}
                     </button>
                 </form>
 
-                <div className="login-hint">
-                    <p><strong>Test Accounts:</strong></p>
-                    <p>Owner: admin / admin</p>
-                    <p>Sales: sales / sales</p>
+                <div className="login-footer">
+                    <p>Secure System • Authorized Personnel Only</p>
                 </div>
             </div>
         </div>

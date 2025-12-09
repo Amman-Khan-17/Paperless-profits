@@ -17,7 +17,7 @@ const Navbar = () => {
                 <h1>📚 Paperless Profits</h1>
             </div>
             <div className="navbar-user">
-                <span className="user-welcome">Welcome, {user?.username}</span>
+                <span className="user-welcome">Welcome, {user?.user_metadata?.username || user?.email}</span>
                 <button onClick={handleLogout} className="btn-logout">
                     Logout
                 </button>

@@ -1,27 +1,43 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { dummyOrders } from '../../services/orders';
+import { ordersAPI } from '../../services/orders';
 import './OrderDetails.css';
 
 const OrderDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In production, fetch order by ID
-        const foundOrder = dummyOrders.find((o) => o.id === parseInt(id));
-        setOrder(foundOrder);
+        const fetchOrder = async () => {
+            try {
+                const data = await ordersAPI.getOrderById(id);
+                setOrder(data);
+            } catch (error) {
+                console.error("Failed to fetch order", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrder();
     }, [id]);
 
-    const handleCancel = () => {
-        if (order.status === 'Completed') {
-            alert('Cannot cancel a completed order');
+    const handleStatusChange = async (newStatus) => {
+        if (order.status === 'Completed' || order.status === 'Cancelled') {
+            alert(`Order is already ${order.status}`);
             return;
         }
 
-        if (window.confirm(`Are you sure you want to cancel this order?`)) {
-            setOrder({ ...order, status: 'Cancelled' });
+        if (window.confirm(`Are you sure you want to mark this order as ${newStatus}?`)) {
+            try {
+                await ordersAPI.updateOrderStatus(order.id, newStatus);
+                setOrder({ ...order, status: newStatus });
+            } catch (error) {
+                console.error(`Failed to update order to ${newStatus}`, error);
+                alert(`Failed to update order to ${newStatus}`);
+            }
         }
     };
 
@@ -56,12 +72,12 @@ const OrderDetails = () => {
                         <div className="info-item">
                             <span className="info-label">Order Date:</span>
                             <span className="info-value">
-                                {new Date(order.orderDate).toLocaleDateString()}
+                                {new Date(order.order_date).toLocaleDateString()}
                             </span>
                         </div>
                         <div className="info-item">
                             <span className="info-label">Status:</span>
-                            <span className={`status-badge status-${order.status.toLowerCase()}`}>
+                            <span className={`status-badge status-${order.status?.toLowerCase() || 'pending'}`}>
                                 {order.status}
                             </span>
                         </div>
@@ -74,11 +90,15 @@ const OrderDetails = () => {
                     <div className="info-grid">
                         <div className="info-item">
                             <span className="info-label">Name:</span>
-                            <span className="info-value">{order.customerName}</span>
+                            <span className="info-value">{order.customer_name}</span>
                         </div>
                         <div className="info-item">
                             <span className="info-label">Customer ID:</span>
-                            <span className="info-value">#{order.customerId}</span>
+                            <span className="info-value">#{order.customer_id}</span>
+                        </div>
+                        <div className="info-item">
+                            <span className="info-label">Salesman:</span>
+                            <span className="info-value">{order.salesman_name || 'N/A'}</span>
                         </div>
                     </div>
                 </div>
@@ -97,15 +117,15 @@ const OrderDetails = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {order.items.map((item) => (
+                            {order.items && order.items.map((item) => (
                                 <tr key={item.id}>
                                     <td>{item.name}</td>
                                     <td>
                                         <span className="item-type">{item.type}</span>
                                     </td>
-                                    <td>${item.price.toFixed(2)}</td>
+                                    <td>${Number(item.price).toFixed(2)}</td>
                                     <td>{item.quantity}</td>
-                                    <td>${item.subtotal.toFixed(2)}</td>
+                                    <td>${Number(item.subtotal).toFixed(2)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -118,7 +138,7 @@ const OrderDetails = () => {
                     <div className="summary-section">
                         <div className="summary-row">
                             <span>Subtotal:</span>
-                            <span>${order.totalAmount.toFixed(2)}</span>
+                            <span>${Number(order.total_amount).toFixed(2)}</span>
                         </div>
                         <div className="summary-row">
                             <span>Discount:</span>
@@ -126,7 +146,7 @@ const OrderDetails = () => {
                         </div>
                         <div className="summary-row total">
                             <span>Total Amount:</span>
-                            <span>${order.totalAmount.toFixed(2)}</span>
+                            <span>${Number(order.total_amount).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -136,11 +156,70 @@ const OrderDetails = () => {
                     <button onClick={handleBack} className="btn-back">
                         ← Back to Orders
                     </button>
+                    <button onClick={() => window.print()} className="btn-print" style={{ backgroundColor: '#6b7280', color: 'white', marginRight: '10px' }}>
+                        🖨️ Print Receipt
+                    </button>
                     {order.status === 'Pending' && (
-                        <button onClick={handleCancel} className="btn-cancel-order">
-                            Cancel Order
-                        </button>
+                        <>
+                            <button onClick={() => handleStatusChange('Completed')} className="btn-complete-order" style={{ backgroundColor: '#28a745', color: 'white', marginRight: '10px' }}>
+                                ✅ Complete Order
+                            </button>
+                            <button onClick={() => handleStatusChange('Cancelled')} className="btn-cancel-order">
+                                ❌ Cancel Order
+                            </button>
+                        </>
                     )}
+                </div>
+
+                {/* Printable Receipt Area (Hidden by default, shown on print) */}
+                <div className="printable-receipt">
+                    <div className="receipt-header">
+                        {/* Placeholder Logo - Replace src with actual logo URL or import */}
+                        <div className="receipt-logo">
+                            <span style={{ fontSize: '2rem' }}>📚</span>
+                        </div>
+                        <h2>Paperless Profits</h2>
+                        <p>123 Bookstore Lane, Reading City</p>
+                        <p>Tel: +1 234 567 890</p>
+                    </div>
+                    <div className="receipt-info">
+                        <p>Order #: {order.id}</p>
+                        <p>Date: {new Date(order.order_date).toLocaleDateString()}</p>
+                        <p>Salesman: {order.salesman_name || 'Owner'}</p>
+                        <p>Customer: {order.customer_name}</p>
+                    </div>
+                    <hr />
+                    <table className="receipt-items">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {order.items && order.items.map((item) => (
+                                <tr key={item.id}>
+                                    <td>{item.name}</td>
+                                    <td>{item.quantity}</td>
+                                    <td>${Number(item.price).toFixed(2)}</td>
+                                    <td>${Number(item.subtotal).toFixed(2)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <hr />
+                    <div className="receipt-summary">
+                        <div className="row">
+                            <span>Total:</span>
+                            <span>${Number(order.total_amount).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div className="receipt-footer">
+                        <p>Thank you for your purchase!</p>
+                        <p>Please come again.</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,20 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { dummyCustomers } from '../../services/customers';
-import { dummyBooks } from '../../services/books';
-import { dummyStationary } from '../../services/stationary';
+import { useAuth } from '../../context/AuthContext';
+import { booksAPI } from '../../services/books';
+import { stationaryAPI } from '../../services/stationary';
+import { customersAPI } from '../../services/customers';
+import { ordersAPI } from '../../services/orders';
 import '../Books/BookForm.css';
 import './OrderCreate.css';
 
 const OrderCreate = () => {
     const navigate = useNavigate();
-    const [selectedCustomer, setSelectedCustomer] = useState('');
+    const { user } = useAuth();
     const [itemType, setItemType] = useState('books');
     const [selectedItem, setSelectedItem] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [selectedCustomer, setSelectedCustomer] = useState('');
     const [orderItems, setOrderItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [allBooks, setAllBooks] = useState([]);
+    const [allStationary, setAllStationary] = useState([]);
+    const [availableItems, setAvailableItems] = useState([]);
+    const [customers, setCustomers] = useState([]);
 
-    const availableItems = itemType === 'books' ? dummyBooks : dummyStationary;
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [books, stationary, fetchedCustomers] = await Promise.all([
+                    booksAPI.getBooks(),
+                    stationaryAPI.getStationary(),
+                    customersAPI.getCustomers()
+                ]);
+
+                setAllBooks(books);
+                setAllStationary(stationary);
+                setCustomers(fetchedCustomers);
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch data", error);
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        if (itemType === 'books') {
+            setAvailableItems(allBooks);
+        } else {
+            setAvailableItems(allStationary);
+        }
+        setSelectedItem(''); // Reset selected item when item type changes
+    }, [itemType, allBooks, allStationary]);
 
     const handleAddItem = () => {
         if (!selectedItem || quantity < 1) {
@@ -47,7 +84,7 @@ const OrderCreate = () => {
         return orderItems.reduce((sum, item) => sum + item.subtotal, 0);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!selectedCustomer) {
@@ -60,14 +97,25 @@ const OrderCreate = () => {
             return;
         }
 
+        const selectedCustomerObj = customers.find(c => c.id === parseInt(selectedCustomer));
+
         const orderData = {
-            customerId: selectedCustomer,
+            customer_id: selectedCustomer,
+            customer_name: selectedCustomerObj ? selectedCustomerObj.name : 'Unknown',
             items: orderItems,
-            totalAmount: calculateTotal(),
+            total_amount: calculateTotal(),
+            salesman_id: user?.id,
+            salesman_name: user?.user_metadata?.username || user?.email,
+            status: 'Pending'
         };
 
-        console.log('Creating order:', orderData);
-        navigate('/orders');
+        try {
+            await ordersAPI.createOrder(orderData);
+            navigate('/orders');
+        } catch (error) {
+            console.error("Failed to create order", error);
+            alert("Failed to create order");
+        }
     };
 
     const handleCancel = () => {
@@ -95,7 +143,7 @@ const OrderCreate = () => {
                                 required
                             >
                                 <option value="">-- Select Customer --</option>
-                                {dummyCustomers.map((customer) => (
+                                {customers.map((customer) => (
                                     <option key={customer.id} value={customer.id}>
                                         {customer.name} - {customer.email}
                                     </option>
