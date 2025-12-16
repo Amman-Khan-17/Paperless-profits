@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { stationaryAPI } from '../../services/stationary';
 import { useToast } from '../../context/ToastContext';
+import { validation } from '../../utils/validation';
 import '../Books/BookForm.css';
 
 const StationaryForm = () => {
@@ -45,12 +46,22 @@ const StationaryForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (parseFloat(formData.price) < 0 || parseInt(formData.stock) < 0) {
+            toast.error("Price and Stock cannot be negative.");
+            return;
+        }
+
+        if (!validation.hasTextContent(formData.name)) {
+            toast.error("Item name must contain letters.");
+            return;
+        }
+
         // Exclude description as it is not in the database schema
         const stationaryData = {
-            name: formData.name,
+            name: formData.name.trim(),
             category: formData.category,
-            price: formData.price,
-            stock: formData.stock,
+            price: parseFloat(formData.price),
+            stock: parseInt(formData.stock),
             supplier: formData.supplier
         };
 
@@ -116,6 +127,7 @@ const StationaryForm = () => {
                                 id="price"
                                 name="price"
                                 type="number"
+                                min="0"
                                 step="0.01"
                                 value={formData.price}
                                 onChange={handleChange}
@@ -130,6 +142,7 @@ const StationaryForm = () => {
                                 id="stock"
                                 name="stock"
                                 type="number"
+                                min="0"
                                 value={formData.stock}
                                 onChange={handleChange}
                                 placeholder="0"

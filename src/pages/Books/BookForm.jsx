@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { booksAPI } from '../../services/books';
 import { useToast } from '../../context/ToastContext';
+import { validation } from '../../utils/validation';
 import './BookForm.css';
 
 const BookForm = () => {
@@ -49,15 +50,35 @@ const BookForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (parseFloat(formData.price) < 0 || parseInt(formData.stock) < 0) {
+            toast.error("Price and Stock cannot be negative.");
+            return;
+        }
+
+        if (!validation.isValidISBN(formData.isbn)) {
+            toast.error("Invalid ISBN format. Must be 10 or 13 digits.");
+            return;
+        }
+
+        if (!validation.isValidName(formData.author)) {
+            toast.error("Author name contains invalid characters (numbers not allowed).");
+            return;
+        }
+
+        if (!validation.hasTextContent(formData.title)) {
+            toast.error("Title must contain letters.");
+            return;
+        }
+
         // Exclude description as it is not in the database schema
         const bookData = {
-            isbn: formData.isbn,
-            title: formData.title,
-            author: formData.author,
-            publisher: formData.publisher,
+            isbn: formData.isbn.trim(),
+            title: formData.title.trim(),
+            author: formData.author.trim(),
+            publisher: formData.publisher.trim(),
             category: formData.category,
-            price: formData.price,
-            stock: formData.stock
+            price: parseFloat(formData.price),
+            stock: parseInt(formData.stock)
         };
 
         try {
@@ -163,6 +184,7 @@ const BookForm = () => {
                                 id="price"
                                 name="price"
                                 type="number"
+                                min="0"
                                 step="0.01"
                                 value={formData.price}
                                 onChange={handleChange}
@@ -177,6 +199,7 @@ const BookForm = () => {
                                 id="stock"
                                 name="stock"
                                 type="number"
+                                min="0"
                                 value={formData.stock}
                                 onChange={handleChange}
                                 placeholder="0"

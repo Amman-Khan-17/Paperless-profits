@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext'; // Import Toast
 import { usersAPI } from '../../services/users';
+import { validation } from '../../utils/validation';
 import '../Books/BookForm.css';
 
 const UserForm = () => {
@@ -56,8 +57,23 @@ const UserForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            if (!formData.username.trim()) {
+                toast.error("Username cannot be empty.");
+                return;
+            }
+
+            if (!validation.isValidUsername(formData.username)) {
+                toast.error("Username must be at least 3 characters and contain only letters, numbers, underscores, or hyphens.");
+                return;
+            }
+
+            if (!validation.isValidEmail(formData.email)) {
+                toast.error("Invalid email format.");
+                return;
+            }
+
             const updates = {
-                username: formData.username,
+                username: formData.username.trim(),
                 email: formData.email,
                 role: formData.role,
                 status: formData.status
