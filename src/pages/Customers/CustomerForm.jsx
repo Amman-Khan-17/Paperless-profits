@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { customersAPI } from '../../services/customers';
+import { useToast } from '../../context/ToastContext'; // Use toast
+import { validation } from '../../utils/validation';
 import '../Books/BookForm.css';
 
 const CustomerForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id && id !== 'new';
+    const toast = useToast(); // Initialize toast
 
     const [formData, setFormData] = useState({
         name: '',
@@ -40,13 +43,28 @@ const CustomerForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!validation.isValidName(formData.name)) {
+            toast.error("Name contains invalid characters (numbers not allowed)."); // Now using toast
+            return;
+        }
+
+        if (formData.city && !validation.isValidName(formData.city)) {
+            toast.error("City contains invalid characters.");
+            return;
+        }
+
+        if (!validation.isValidPhone(formData.phone)) {
+            toast.error("Invalid phone number format.");
+            return;
+        }
+
         const customerData = {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            address: formData.address,
-            city: formData.city,
-            postal_code: formData.postalCode, // Map camelCase to snake_case
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            address: formData.address.trim(),
+            city: formData.city.trim(),
+            postal_code: formData.postalCode.trim(), // Map camelCase to snake_case
         };
 
         try {
@@ -58,7 +76,7 @@ const CustomerForm = () => {
             navigate('/customers');
         } catch (error) {
             console.error("Failed to save customer", error);
-            alert("Failed to save customer");
+            toast.error("Failed to save customer"); // Use toast
         }
     };
 

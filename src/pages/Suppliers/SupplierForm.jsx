@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { suppliersAPI } from '../../services/suppliers';
 import { useToast } from '../../context/ToastContext';
+import { validation } from '../../utils/validation';
 import '../Books/BookForm.css';
 
 const SupplierForm = () => {
@@ -47,13 +48,28 @@ const SupplierForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (parseInt(formData.totalSupplies) < 0) {
+            toast.error("Total supplies cannot be negative.");
+            return;
+        }
+
+        if (!validation.isValidPhone(formData.phone)) {
+            toast.error("Invalid phone number format.");
+            return;
+        }
+
+        if (!validation.isValidEmail(formData.email)) {
+            toast.error("Invalid email format.");
+            return;
+        }
+
         const supplierData = {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            address: formData.address,
-            city: formData.city,
-            postal_code: formData.postalCode,
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            address: formData.address.trim(),
+            city: formData.city.trim(),
+            postal_code: formData.postalCode.trim(),
             total_supplies: parseInt(formData.totalSupplies) || 0, // Map to Snake Case
         };
 

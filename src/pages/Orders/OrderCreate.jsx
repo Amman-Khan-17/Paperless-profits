@@ -55,7 +55,7 @@ const OrderCreate = () => {
 
     const handleAddItem = () => {
         if (!selectedItem || quantity < 1) {
-            alert('Please select an item and quantity');
+            alert('Please select an item and quantity (must be at least 1)');
             return;
         }
 
